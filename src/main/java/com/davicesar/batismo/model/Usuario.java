@@ -5,6 +5,7 @@ import com.davicesar.batismo.dto.usuario.CadastroUsuarioDTO;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Entity
@@ -31,9 +32,9 @@ public class Usuario {
 
     private String mulher;
 
-    public Usuario(CadastroUsuarioDTO user){
+    public Usuario(CadastroUsuarioDTO user, PasswordEncoder passwordEncoder){
         this.email = user.email();
-        this.senha = user.senha();
+        this.senha = passwordEncoder.encode(user.senha());
         this.cargo = Cargo.valueOf(user.cargo());
         if (cargo.equals(Cargo.casal)) {
             this.marido = user.marido();

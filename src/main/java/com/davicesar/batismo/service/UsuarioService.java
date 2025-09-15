@@ -36,7 +36,7 @@ public class UsuarioService {
     }
 
     public void cadastrarUsuario(CadastroUsuarioDTO usuarioDTO) {
-        Usuario usuario = new Usuario(usuarioDTO);
+        Usuario usuario = new Usuario(usuarioDTO, bCryptPasswordEncoder);
         usuarioRepository.save(usuario);
     }
 
@@ -48,13 +48,18 @@ public class UsuarioService {
         }
 
         var now = Instant.now();
-        var expiresIn = 300L;
 
+        // TODO: implementar refresh token
+        var expiresIn = 86400L; // 1 dia
+
+        var scope = usuario.get().getCargo().name();
+        System.out.println(scope);
         var claims = JwtClaimsSet.builder()
                 .issuer("batismo-api")
                 .subject(usuario.get().getId().toString())
                 .issuedAt(now)
                 .expiresAt(now.plusSeconds(expiresIn))
+                .claim("scope", scope)
                 .build();
 
         var jwtValue = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();

@@ -2,6 +2,7 @@ package com.davicesar.batismo.controller;
 
 import com.davicesar.batismo.dto.batizado.BatizadoDTO;
 import com.davicesar.batismo.service.BatizadoService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -9,10 +10,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-public class BatismoController {
+public class BatizadoController {
     private final BatizadoService batizadoService;
 
-    public BatismoController(BatizadoService batizadoService) {
+    public BatizadoController(BatizadoService batizadoService) {
         this.batizadoService = batizadoService;
     }
 
@@ -28,7 +29,7 @@ public class BatismoController {
 
     // Visualizar batizados
     @GetMapping("/batizados")
-    private List<BatizadoDTO> listarBatizados() {
-        return batizadoService.listarBatizados();
+    public ResponseEntity<List<BatizadoDTO>> listarBatizados() {
+        return ResponseEntity.ok(batizadoService.listarBatizados());
     }
 }
