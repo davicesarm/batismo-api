@@ -1,6 +1,6 @@
 package com.davicesar.batismo.model;
 
-import com.davicesar.batismo.dto.CadastroUsuarioDTO;
+import com.davicesar.batismo.dto.usuario.CadastroUsuarioDTO;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;

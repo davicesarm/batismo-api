@@ -1,7 +1,7 @@
 package com.davicesar.batismo.controller;
 
-import com.davicesar.batismo.dto.CadastroUsuarioDTO;
-import com.davicesar.batismo.dto.UsuarioDTO;
+import com.davicesar.batismo.dto.usuario.CadastroUsuarioDTO;
+import com.davicesar.batismo.dto.usuario.UsuarioDTO;
 import com.davicesar.batismo.service.UsuarioService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;

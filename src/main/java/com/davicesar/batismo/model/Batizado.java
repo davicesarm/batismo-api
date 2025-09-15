@@ -25,5 +25,5 @@ public class Batizado {
    private Usuario casal;
 
    @OneToMany(mappedBy = "batizado", fetch = FetchType.EAGER) // ou LAZY
-   private List<Batizando> batizandos;
+   private List<Catecumeno> catecumenos;
 }

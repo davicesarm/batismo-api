@@ -1,4 +1,4 @@
-package com.davicesar.batismo.dto;
+package com.davicesar.batismo.dto.usuario;
 
 import com.davicesar.batismo.model.Usuario;
 

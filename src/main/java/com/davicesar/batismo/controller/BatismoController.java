@@ -1,6 +1,6 @@
 package com.davicesar.batismo.controller;
 
-import com.davicesar.batismo.dto.BatizadoDTO;
+import com.davicesar.batismo.dto.batizado.BatizadoDTO;
 import com.davicesar.batismo.service.BatizadoService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,20 +12,19 @@ import java.util.List;
 public class BatismoController {
     private final BatizadoService batizadoService;
 
-
     public BatismoController(BatizadoService batizadoService) {
         this.batizadoService = batizadoService;
     }
 
-    // Cadastrar batismo
-    @PostMapping("/cadastrarBatismo")
-    private void cadastrarBatismo() {}
+    // Cadastrar batizado
+    @PostMapping("/cadastrarBatizado")
+    private void cadastrarBatizado() {}
 
-    // Editar batismo
-    private void editarBatismo() {}
+    // Editar batizado
+    private void editarBatizado() {}
 
-    // Excluir batismo
-    private void excluirBatismo() {}
+    // Excluir batizado
+    private void excluirBatizado() {}
 
     // Visualizar batizados
     @GetMapping("/batizados")

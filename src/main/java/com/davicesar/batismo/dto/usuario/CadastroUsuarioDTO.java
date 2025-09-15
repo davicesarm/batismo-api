@@ -1,6 +1,6 @@
-package com.davicesar.batismo.dto;
+package com.davicesar.batismo.dto.usuario;
 
-public record CadastroUsuarioDTO (
+public record CadastroUsuarioDTO(
     String email,
     String cargo,
     String senha,

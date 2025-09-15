@@ -1,7 +1,7 @@
 package com.davicesar.batismo.service;
 
-import com.davicesar.batismo.dto.CadastroUsuarioDTO;
-import com.davicesar.batismo.dto.UsuarioDTO;
+import com.davicesar.batismo.dto.usuario.CadastroUsuarioDTO;
+import com.davicesar.batismo.dto.usuario.UsuarioDTO;
 import com.davicesar.batismo.model.Usuario;
 import com.davicesar.batismo.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
