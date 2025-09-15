@@ -1,9 +1,11 @@
 package com.davicesar.batismo.model;
 
+import com.davicesar.batismo.dto.login.LoginRequest;
 import com.davicesar.batismo.dto.usuario.CadastroUsuarioDTO;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Entity
 @Data
@@ -39,6 +41,10 @@ public class Usuario {
         } else {
             this.nome = user.nome();
         }
+    }
+
+    public boolean loginCorreto(LoginRequest loginRequest, PasswordEncoder passwordEncoder) {
+        return passwordEncoder.matches(loginRequest.senha(), this.senha);
     }
 }
 
