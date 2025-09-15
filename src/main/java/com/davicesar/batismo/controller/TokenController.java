@@ -4,12 +4,10 @@ import com.davicesar.batismo.dto.login.LoginRequest;
 import com.davicesar.batismo.dto.login.LoginResponse;
 import com.davicesar.batismo.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.sound.midi.SysexMessage;
 
 @RestController
 public class TokenController {
