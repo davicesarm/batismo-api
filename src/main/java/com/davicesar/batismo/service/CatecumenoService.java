@@ -1,6 +1,6 @@
 package com.davicesar.batismo.service;
 
-import com.davicesar.batismo.dto.batizando.BatizandoDTO;
+import com.davicesar.batismo.dto.catecumeno.CatecumenoDTO;
 import com.davicesar.batismo.repository.CatecumenoRepository;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +14,10 @@ public class CatecumenoService {
         this.catecumenoRepository = catecumenoRepository;
     }
 
-    public List<BatizandoDTO> listarBatizandos() {
+    public List<CatecumenoDTO> listarCatecumenos() {
         return catecumenoRepository.findAll()
                 .stream()
-                .map(BatizandoDTO::new)
+                .map(CatecumenoDTO::new)
                 .toList();
     }
 

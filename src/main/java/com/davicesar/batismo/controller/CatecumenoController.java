@@ -1,6 +1,6 @@
 package com.davicesar.batismo.controller;
 
-import com.davicesar.batismo.dto.batizando.BatizandoDTO;
+import com.davicesar.batismo.dto.catecumeno.CatecumenoDTO;
 import com.davicesar.batismo.service.CatecumenoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,9 +17,9 @@ public class CatecumenoController {
         this.catecumenoService = catecumenoService;
     }
 
-    // Visualizar batizandos
-    @GetMapping("/batizandos")
-    public ResponseEntity<List<BatizandoDTO>> listarBatizandos() {
-        return ResponseEntity.ok(catecumenoService.listarBatizandos());
+    // Visualizar catecumenos
+    @GetMapping("/catecumenos")
+    public ResponseEntity<List<CatecumenoDTO>> listarCatecumenos() {
+        return ResponseEntity.ok(catecumenoService.listarCatecumenos());
     }
 }

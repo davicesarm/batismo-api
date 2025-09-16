@@ -1,10 +1,13 @@
 package com.davicesar.batismo.controller;
 
 import com.davicesar.batismo.dto.batizado.BatizadoDTO;
+import com.davicesar.batismo.dto.batizado.CadastroBatizadoDTO;
 import com.davicesar.batismo.service.BatizadoService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -18,8 +21,12 @@ public class BatizadoController {
     }
 
     // Cadastrar batizado
-    @PostMapping("/cadastrarBatizado")
-    private void cadastrarBatizado() {}
+    @PostMapping("/batizados")
+    @PreAuthorize("hasAuthority('SCOPE_admin') or hasAuthority('SCOPE_secretaria')")
+    public ResponseEntity<Void> cadastrarBatizado(@RequestBody CadastroBatizadoDTO batizado) {
+        batizadoService.cadastrarBatizado(batizado);
+        return ResponseEntity.ok().build();
+    }
 
     // Editar batizado
     private void editarBatizado() {}

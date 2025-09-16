@@ -1,6 +1,6 @@
 package com.davicesar.batismo.dto.batizado;
 
-import com.davicesar.batismo.dto.batizando.BatizandoDTO;
+import com.davicesar.batismo.dto.catecumeno.CatecumenoDTO;
 import com.davicesar.batismo.dto.usuario.CasalDTO;
 import com.davicesar.batismo.model.Batizado;
 
@@ -12,7 +12,7 @@ public record BatizadoDTO(
         LocalDateTime data,
         String celebrante,
         CasalDTO casal,
-        List<BatizandoDTO> batizandos
+        List<CatecumenoDTO> catecumenos
 ) {
     public BatizadoDTO(Batizado b) {
         this(
@@ -20,7 +20,7 @@ public record BatizadoDTO(
                 b.getData(),
                 b.getCelebrante(),
                 new CasalDTO(b.getCasal()),
-                b.getCatecumenos().stream().map(BatizandoDTO::new).toList()
+                b.getCatecumenos().stream().map(CatecumenoDTO::new).toList()
         );
     }
 }

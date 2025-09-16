@@ -53,7 +53,7 @@ public class UsuarioService {
         var expiresIn = 86400L; // 1 dia
 
         var scope = usuario.get().getCargo().name();
-        System.out.println(scope);
+
         var claims = JwtClaimsSet.builder()
                 .issuer("batismo-api")
                 .subject(usuario.get().getId().toString())
