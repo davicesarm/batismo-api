@@ -10,6 +10,6 @@ import java.util.List;
 @Repository
 public interface BatizadoRepository extends JpaRepository<Batizado, Long> {
 
-    @Query("SELECT b FROM Batizado b JOIN FETCH b.catecumenos")
+    @Query("SELECT DISTINCT b FROM Batizado b JOIN FETCH b.catecumenos ORDER BY b.data DESC")
     List<Batizado> findAllWithCatecumenos();
 }

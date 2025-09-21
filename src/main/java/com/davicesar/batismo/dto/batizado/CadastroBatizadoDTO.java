@@ -12,9 +12,6 @@ public record CadastroBatizadoDTO(
 
         String celebrante,
 
-        @NotNull
-        Long casal_id,
-
         @NotEmpty
         List<String> catecumenos
 )

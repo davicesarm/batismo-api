@@ -2,29 +2,35 @@ package com.davicesar.batismo.service;
 
 import com.davicesar.batismo.dto.batizado.BatizadoDTO;
 import com.davicesar.batismo.dto.batizado.CadastroBatizadoDTO;
-import com.davicesar.batismo.dto.catecumeno.CatecumenoDTO;
 import com.davicesar.batismo.model.Batizado;
 import com.davicesar.batismo.model.Catecumeno;
+import com.davicesar.batismo.model.OrdemCasal;
+import com.davicesar.batismo.model.Usuario;
 import com.davicesar.batismo.repository.BatizadoRepository;
 import com.davicesar.batismo.repository.CatecumenoRepository;
+import com.davicesar.batismo.repository.OrdemCasalRepository;
 import com.davicesar.batismo.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
 @Service
 public class BatizadoService {
     private final BatizadoRepository batizadoRepository;
-    private final UsuarioRepository usuarioRepository;
     private final CatecumenoRepository catecumenoRepository;
+    private final OrdemCasalRepository ordemCasalRepository;
 
-    public BatizadoService(BatizadoRepository batizadoRepository, UsuarioRepository usuarioRepository, CatecumenoRepository catecumenoRepository) {
+    public BatizadoService(
+            BatizadoRepository batizadoRepository,
+            UsuarioRepository usuarioRepository,
+            CatecumenoRepository catecumenoRepository,
+            OrdemCasalRepository ordemCasalRepository
+    ) {
         this.batizadoRepository = batizadoRepository;
-        this.usuarioRepository = usuarioRepository;
         this.catecumenoRepository = catecumenoRepository;
+        this.ordemCasalRepository = ordemCasalRepository;
     }
 
     public List<BatizadoDTO> listarBatizados() {
@@ -36,14 +42,26 @@ public class BatizadoService {
 
     @Transactional
     public void cadastrarBatizado(CadastroBatizadoDTO batizadoDTO) {
-        var usuario = usuarioRepository.findById(batizadoDTO.casal_id());
-        if (usuario.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
-        }
         Batizado batizado = new Batizado();
         batizado.setData(batizadoDTO.data());
-        batizado.setCasal(usuario.get());
+
+        Sort sort = Sort.by("ordem");
+        List<OrdemCasal> usuarios = ordemCasalRepository.findAll(sort).stream().toList();
+        System.out.println(usuarios.size());
+        System.out.println(usuarios.getFirst());
+
+        Usuario casalDaVez = usuarios.getFirst().getCasal();
+
+        int novaOrdem = usuarios.size();
+        for (OrdemCasal o: usuarios) {
+            o.setOrdem((long) novaOrdem);
+            novaOrdem = (novaOrdem + 1) % usuarios.size();
+        }
+
+        ordemCasalRepository.saveAll(usuarios);
+
         batizado.setCelebrante(batizadoDTO.celebrante());
+        batizado.setCasal(casalDaVez);
         batizadoRepository.save(batizado);
 
         for (String catNome: batizadoDTO.catecumenos()) {

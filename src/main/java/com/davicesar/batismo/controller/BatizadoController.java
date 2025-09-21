@@ -20,7 +20,6 @@ public class BatizadoController {
         this.batizadoService = batizadoService;
     }
 
-    // Cadastrar batizado
     @PostMapping("/batizados")
     @PreAuthorize("hasAuthority('SCOPE_admin') or hasAuthority('SCOPE_secretaria')")
     public ResponseEntity<Void> cadastrarBatizado(@RequestBody CadastroBatizadoDTO batizado) {
