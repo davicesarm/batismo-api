@@ -34,7 +34,7 @@ public class Usuario {
     public Usuario(CadastroUsuarioDTO user, PasswordEncoder passwordEncoder){
         this.email = user.email();
         this.senha = passwordEncoder.encode(user.senha());
-        this.cargo = Cargo.valueOf(user.cargo());
+        this.cargo = user.cargo();
         if (cargo.equals(Cargo.casal)) {
             this.marido = user.marido();
             this.mulher = user.mulher();
