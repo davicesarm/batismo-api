@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record CadastroBatizadoDTO(
+public record BatizadoRequest(
         @NotNull
         LocalDateTime data,
 

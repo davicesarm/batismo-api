@@ -1,7 +1,7 @@
 package com.davicesar.batismo.service;
 
-import com.davicesar.batismo.dto.batizado.BatizadoDTO;
-import com.davicesar.batismo.dto.batizado.CadastroBatizadoDTO;
+import com.davicesar.batismo.dto.batizado.BatizadoResponse;
+import com.davicesar.batismo.dto.batizado.BatizadoRequest;
 import com.davicesar.batismo.model.Batizado;
 import com.davicesar.batismo.model.Catecumeno;
 import com.davicesar.batismo.model.OrdemCasal;
@@ -9,7 +9,6 @@ import com.davicesar.batismo.model.Usuario;
 import com.davicesar.batismo.repository.BatizadoRepository;
 import com.davicesar.batismo.repository.CatecumenoRepository;
 import com.davicesar.batismo.repository.OrdemCasalRepository;
-import com.davicesar.batismo.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,6 @@ public class BatizadoService {
 
     public BatizadoService(
             BatizadoRepository batizadoRepository,
-            UsuarioRepository usuarioRepository,
             CatecumenoRepository catecumenoRepository,
             OrdemCasalRepository ordemCasalRepository
     ) {
@@ -33,15 +31,15 @@ public class BatizadoService {
         this.ordemCasalRepository = ordemCasalRepository;
     }
 
-    public List<BatizadoDTO> listarBatizados() {
+    public List<BatizadoResponse> listarBatizados() {
         return batizadoRepository.findAllWithCatecumenos()
                 .stream()
-                .map(BatizadoDTO::new)
+                .map(BatizadoResponse::new)
                 .toList();
     }
 
     @Transactional
-    public void cadastrarBatizado(CadastroBatizadoDTO batizadoDTO) {
+    public void cadastrarBatizado(BatizadoRequest batizadoDTO) {
         Batizado batizado = new Batizado();
         batizado.setData(batizadoDTO.data());
 

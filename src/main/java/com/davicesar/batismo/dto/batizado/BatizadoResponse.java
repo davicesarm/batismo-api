@@ -7,14 +7,14 @@ import com.davicesar.batismo.model.Batizado;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public record BatizadoDTO(
+public record BatizadoResponse(
         Long id,
         LocalDateTime data,
         String celebrante,
         CasalResponse casal,
         List<CatecumenoDTO> catecumenos
 ) {
-    public BatizadoDTO(Batizado b) {
+    public BatizadoResponse(Batizado b) {
         this(
                 b.getId(),
                 b.getData(),

@@ -1,14 +1,12 @@
 package com.davicesar.batismo.controller;
 
+import com.davicesar.batismo.dto.casal.OrdemCasalRequest;
 import com.davicesar.batismo.dto.casal.OrdemCasalResponse;
-import com.davicesar.batismo.dto.casal.TrocarOrdemDTO;
 import com.davicesar.batismo.service.CasalService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -26,9 +24,9 @@ public class CasalController {
     }
 
     @PreAuthorize("hasAuthority('SCOPE_admin') or hasAuthority('SCOPE_coordenador')")
-    @PostMapping("/casais/ordem")
-    public ResponseEntity<Void> trocarOrdem(@RequestBody TrocarOrdemDTO trocarOrdemDTO) {
-        casalService.trocarOrdem(trocarOrdemDTO);
+    @PatchMapping("/casais/ordem")
+    public ResponseEntity<Void> trocarOrdem(@Valid @RequestBody OrdemCasalRequest dto) {
+        casalService.trocarOrdem(dto);
         return ResponseEntity.ok().build();
     }
 }

@@ -15,7 +15,8 @@ public class OrdemCasal {
     @Column(name = "id_casal", nullable = false)
     private Long idCasal;
 
-    @Column(name = "ordem", unique = false, nullable = false, columnDefinition = "serial")
+    // Existe um trigger para setar a ordem automática.
+    @Column(name = "ordem", unique = false, nullable = false)
     private Long ordem;
 
     @OneToOne
