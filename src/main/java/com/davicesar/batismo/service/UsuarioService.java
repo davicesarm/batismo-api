@@ -2,8 +2,8 @@ package com.davicesar.batismo.service;
 
 import com.davicesar.batismo.dto.login.LoginRequest;
 import com.davicesar.batismo.dto.login.LoginResponse;
-import com.davicesar.batismo.dto.usuario.CadastroUsuarioDTO;
-import com.davicesar.batismo.dto.usuario.UsuarioDTO;
+import com.davicesar.batismo.dto.usuario.UsuarioRequest;
+import com.davicesar.batismo.dto.usuario.UsuarioResponse;
 import com.davicesar.batismo.model.Usuario;
 import com.davicesar.batismo.repository.UsuarioRepository;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -28,14 +28,14 @@ public class UsuarioService {
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
-    public List<UsuarioDTO> listarUsuarios() {
+    public List<UsuarioResponse> listarUsuarios() {
         return usuarioRepository.findAll()
                 .stream()
-                .map(UsuarioDTO::new)
+                .map(UsuarioResponse::new)
                 .toList();
     }
 
-    public void cadastrarUsuario(CadastroUsuarioDTO usuarioDTO) {
+    public void cadastrarUsuario(UsuarioRequest usuarioDTO) {
         Usuario usuario = new Usuario(usuarioDTO, bCryptPasswordEncoder);
         usuarioRepository.save(usuario);
     }

@@ -1,7 +1,7 @@
 package com.davicesar.batismo.controller;
 
-import com.davicesar.batismo.dto.usuario.CadastroUsuarioDTO;
-import com.davicesar.batismo.dto.usuario.UsuarioDTO;
+import com.davicesar.batismo.dto.usuario.UsuarioRequest;
+import com.davicesar.batismo.dto.usuario.UsuarioResponse;
 import com.davicesar.batismo.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,12 +22,12 @@ public class UsuarioController {
     }
 
     @GetMapping("/usuarios")
-    public ResponseEntity<List<UsuarioDTO>> listarUsuarios() {
+    public ResponseEntity<List<UsuarioResponse>> listarUsuarios() {
         return ResponseEntity.ok(usuarioService.listarUsuarios());
     }
 
     @PostMapping("/usuarios")
-    public ResponseEntity<Void> cadastrarUsuario(@RequestBody CadastroUsuarioDTO dto) {
+    public ResponseEntity<Void> cadastrarUsuario(@RequestBody UsuarioRequest dto) {
         usuarioService.cadastrarUsuario(dto);
         return ResponseEntity.ok().build();
     }

@@ -47,8 +47,6 @@ public class BatizadoService {
 
         Sort sort = Sort.by("ordem");
         List<OrdemCasal> usuarios = ordemCasalRepository.findAll(sort).stream().toList();
-        System.out.println(usuarios.size());
-        System.out.println(usuarios.getFirst());
 
         Usuario casalDaVez = usuarios.getFirst().getCasal();
 
@@ -57,8 +55,6 @@ public class BatizadoService {
             o.setOrdem((long) novaOrdem);
             novaOrdem = (novaOrdem + 1) % usuarios.size();
         }
-
-        ordemCasalRepository.saveAll(usuarios);
 
         batizado.setCelebrante(batizadoDTO.celebrante());
         batizado.setCasal(casalDaVez);

@@ -2,14 +2,14 @@ package com.davicesar.batismo.dto.usuario;
 
 import com.davicesar.batismo.model.Usuario;
 
-public record UsuarioDTO(
+public record UsuarioResponse(
     String email,
     String cargo,
     String nome,
     String marido,
     String mulher
 ) {
-    public UsuarioDTO(Usuario u) {
+    public UsuarioResponse(Usuario u) {
         this(u.getEmail(), u.getCargo().name(), u.getNome(), u.getMarido(), u.getMulher());
     }
 

@@ -1,7 +1,7 @@
 package com.davicesar.batismo.model;
 
 import com.davicesar.batismo.dto.login.LoginRequest;
-import com.davicesar.batismo.dto.usuario.CadastroUsuarioDTO;
+import com.davicesar.batismo.dto.usuario.UsuarioRequest;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,7 +31,7 @@ public class Usuario {
 
     private String mulher;
 
-    public Usuario(CadastroUsuarioDTO user, PasswordEncoder passwordEncoder){
+    public Usuario(UsuarioRequest user, PasswordEncoder passwordEncoder){
         this.email = user.email();
         this.senha = passwordEncoder.encode(user.senha());
         this.cargo = user.cargo();
