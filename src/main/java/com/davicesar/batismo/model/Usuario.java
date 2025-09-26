@@ -31,6 +31,9 @@ public class Usuario {
 
     private String mulher;
 
+    @Column(nullable = false)
+    private boolean inativo;
+
     public Usuario(UsuarioRequest user, PasswordEncoder passwordEncoder){
         this.email = user.email();
         this.senha = passwordEncoder.encode(user.senha());
@@ -41,6 +44,10 @@ public class Usuario {
         } else {
             this.nome = user.nome();
         }
+    }
+
+    public void setSenha(String senha, PasswordEncoder passwordEncoder) {
+        this.senha = passwordEncoder.encode(senha);
     }
 
     public boolean loginCorreto(LoginRequest loginRequest, PasswordEncoder passwordEncoder) {
