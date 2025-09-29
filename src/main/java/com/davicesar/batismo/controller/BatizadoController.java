@@ -5,10 +5,7 @@ import com.davicesar.batismo.dto.batizado.BatizadoRequest;
 import com.davicesar.batismo.service.BatizadoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -35,7 +32,10 @@ public class BatizadoController {
 
     // Visualizar batizados
     @GetMapping("/batizados")
-    public ResponseEntity<List<BatizadoResponse>> listarBatizados() {
-        return ResponseEntity.ok(batizadoService.listarBatizados());
+    public ResponseEntity<List<BatizadoResponse>> listarBatizados(
+            @RequestParam(value = "mes", required = false) Integer mes,
+            @RequestParam(value = "ano", required = false) Integer ano
+    ) {
+        return ResponseEntity.ok(batizadoService.listarBatizados(mes, ano));
     }
 }

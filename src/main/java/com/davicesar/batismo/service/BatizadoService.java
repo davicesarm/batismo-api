@@ -31,9 +31,20 @@ public class BatizadoService {
         this.ordemCasalRepository = ordemCasalRepository;
     }
 
-    public List<BatizadoResponse> listarBatizados() {
-        return batizadoRepository.findAllWithCatecumenos()
-                .stream()
+    public List<BatizadoResponse> listarBatizados(Integer mes, Integer ano) {
+        List<Batizado> batizados;
+
+        if (mes != null && ano != null) {
+            batizados = batizadoRepository.findByMesAndAno(mes, ano);
+        } else if (mes != null) {
+            batizados = batizadoRepository.findByMes(mes);
+        } else if (ano != null) {
+            batizados = batizadoRepository.findByAno(ano);
+        } else {
+            batizados = batizadoRepository.findAllWithCatecumenos();
+        }
+
+        return batizados.stream()
                 .map(BatizadoResponse::new)
                 .toList();
     }
