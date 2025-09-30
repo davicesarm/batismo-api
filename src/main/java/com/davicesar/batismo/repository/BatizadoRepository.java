@@ -14,7 +14,7 @@ public interface BatizadoRepository extends JpaRepository<Batizado, Long> {
     @Query("""
         SELECT b FROM Batizado b
         JOIN FETCH b.catecumenos
-        ORDER BY b.data DESC
+        ORDER BY b.data ASC
         """)
     List<Batizado> findAllWithCatecumenos();
 
@@ -22,7 +22,7 @@ public interface BatizadoRepository extends JpaRepository<Batizado, Long> {
         SELECT b FROM Batizado b
         LEFT JOIN FETCH b.catecumenos
         WHERE MONTH(b.data) = :mes
-        ORDER BY b.data DESC
+        ORDER BY b.data ASC
         """)
     List<Batizado> findByMes(@Param("mes") Integer mes);
 
@@ -32,7 +32,7 @@ public interface BatizadoRepository extends JpaRepository<Batizado, Long> {
         LEFT JOIN FETCH b.catecumenos
         WHERE YEAR(b.data) = :ano
         AND MONTH(b.data) = :mes
-        ORDER BY b.data DESC
+        ORDER BY b.data ASC
         """)
     List<Batizado> findByAno(@Param("ano") Integer ano);
 
@@ -41,7 +41,7 @@ public interface BatizadoRepository extends JpaRepository<Batizado, Long> {
         LEFT JOIN FETCH b.catecumenos
         WHERE YEAR(b.data) = :ano
         AND MONTH(b.data) = :mes
-        ORDER BY b.data DESC
+        ORDER BY b.data ASC
         """)
     List<Batizado> findByMesAndAno(@Param("mes") Integer mes, @Param("ano") Integer ano);
 }
