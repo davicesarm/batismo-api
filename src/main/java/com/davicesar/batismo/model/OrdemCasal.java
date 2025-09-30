@@ -16,7 +16,7 @@ public class OrdemCasal {
     private Long idCasal;
 
     // Existe um trigger para setar a ordem automática.
-    @Column(name = "ordem", unique = false, nullable = false)
+    @Column(name = "ordem", nullable = false)
     private Long ordem;
 
     @OneToOne
