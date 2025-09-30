@@ -13,7 +13,7 @@ public class Catecumeno {
     @Column(nullable = false)
     private String nome;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_batizado", nullable = false)
     private Batizado batizado;
 

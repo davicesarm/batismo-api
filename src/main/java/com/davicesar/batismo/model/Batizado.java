@@ -23,6 +23,6 @@ public class Batizado {
     @JoinColumn(name = "id_casal", nullable = false)
     private Usuario casal;
 
-    @OneToMany(mappedBy = "batizado", fetch = FetchType.EAGER) // ou LAZY
+    @OneToMany(mappedBy = "batizado", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER) // ou LAZY
     private List<Catecumeno> catecumenos;
 }
