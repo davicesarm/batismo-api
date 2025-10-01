@@ -86,10 +86,25 @@ public class BatizadoService {
         var batizado = batizadoRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY));
 
-        // TODO: editar catecumenos.
+        editarCatecumenos(batizado, dto.catecumenos());
         batizado.setCelebrante(dto.celebrante());
         batizado.setData(dto.data());
-//        batizado.setCatecumenos(????);
+    }
+
+    @Transactional
+    public void editarCatecumenos(Batizado batizado, List<String> catecumenos) {
+        if (catecumenos == null || catecumenos.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "A lista de catecúmenos não pode ser vazia.");
+        }
+
+        batizado.getCatecumenos().clear();
+
+        for (String nomeCatecumeno : catecumenos) {
+            var novoCatecumeno = new Catecumeno();
+            novoCatecumeno.setNome(nomeCatecumeno);
+            novoCatecumeno.setBatizado(batizado);
+            batizado.getCatecumenos().add(novoCatecumeno);
+        }
     }
 
     @Transactional
