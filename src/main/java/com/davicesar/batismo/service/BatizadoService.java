@@ -14,7 +14,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 @Service
 public class BatizadoService {
@@ -36,18 +41,7 @@ public class BatizadoService {
     }
 
     public List<BatizadoResponse> listarBatizados(Integer mes, Integer ano) {
-        List<Batizado> batizados;
-
-        if (mes != null && ano != null) {
-            batizados = batizadoRepository.findByMesAndAno(mes, ano);
-        } else if (mes != null) {
-            batizados = batizadoRepository.findByMes(mes);
-        } else if (ano != null) {
-            batizados = batizadoRepository.findByAno(ano);
-        } else {
-            batizados = batizadoRepository.findAllWithCatecumenos();
-        }
-
+        List<Batizado> batizados = batizadoRepository.findByMesAndAno(mes, ano);
         return batizados.stream()
                 .map(BatizadoResponse::new)
                 .toList();
@@ -55,22 +49,20 @@ public class BatizadoService {
 
     @Transactional
     public void cadastrarBatizado(BatizadoRequest batizadoDTO) {
+        if (!intervaloDataValido(batizadoDTO.data())) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
         Batizado batizado = new Batizado();
         batizado.setData(batizadoDTO.data());
 
-        Sort sort = Sort.by("ordem");
-        List<OrdemCasal> usuarios = ordemCasalRepository.findAll(sort).stream().toList();
+        OrdemCasal casal = ordemCasalRepository.findByOrdem(1L).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        );
 
-        Usuario casalDaVez = usuarios.getFirst().getCasal();
-
-        int novaOrdem = usuarios.size();
-        for (OrdemCasal o: usuarios) {
-            o.setOrdem((long) novaOrdem);
-            novaOrdem = (novaOrdem + 1) % usuarios.size();
-        }
-
+        // Define um casal para a criação do batizado (pode ser qualquer um)
+        batizado.setCasal(casal.getCasal());
         batizado.setCelebrante(batizadoDTO.celebrante());
-        batizado.setCasal(casalDaVez);
         batizadoRepository.save(batizado);
 
         for (String catNome: batizadoDTO.catecumenos()) {
@@ -78,6 +70,68 @@ public class BatizadoService {
             cat.setNome(catNome);
             cat.setBatizado(batizado);
             catecumenoRepository.save(cat);
+        }
+
+        alocarAutomaticamente(batizado.getData());
+    }
+
+    private boolean intervaloDataValido(LocalDateTime data) {
+        return batizadoRepository
+                .findByDateRange(
+                        //"1:29", pois o intervalo é [start, end) e quero verificar explicitamente
+                        // se existe um valor dentro desse intervalo, sem incluir o start
+                        data.minusHours(1).minusMinutes(29),
+                        data.plusHours(1).plusMinutes(30)
+                ).isEmpty();
+    }
+
+    /**
+     * Quando um batizado é cadastrado, rearranja a escala para
+     * manter a ordem dos casais.
+     * Passa o casal do batizado seguinte para o anterior e assim
+     * sucessivamente. No final, o último batizado fica com o casal da vez.
+     *
+     * @param dataBatizado é a data que define o intervalo que deve ser rearranjado
+     */
+    @Transactional
+    public void alocarAutomaticamente(LocalDateTime dataBatizado) {
+        List<OrdemCasal> casais = ordemCasalRepository.findAll(Sort.by("ordem"));
+
+        var batizados = batizadoRepository.findByDateRange(dataBatizado, LocalDateTime.of(3000, 12, 31, 23, 59, 59));
+
+        for (int i = 0; i < batizados.size() - 1; i++) {
+            batizados.get(i).setCasal(batizados.get(i + 1).getCasal());
+        }
+
+        Usuario casalDaVez = casais.getFirst().getCasal();
+        batizados.getLast().setCasal(casalDaVez);
+
+        int novaOrdem = casais.size();
+        for (OrdemCasal o: casais) {
+            o.setOrdem((long) novaOrdem);
+            novaOrdem = (novaOrdem + 1) % casais.size();
+        }
+    }
+
+    /**
+     * Refaz a escala de todos os batizados depois do dia atual.
+     */
+    @Transactional
+    public void refazerEscala() {
+        LocalDateTime amanha = LocalDate.now(ZoneId.of("America/Recife")).plusDays(1).atStartOfDay();
+        var batizados = batizadoRepository.findByDateRange(amanha, LocalDateTime.of(3000, 12, 31, 23, 59, 59));
+        Queue<OrdemCasal> casais = new LinkedList<>(ordemCasalRepository.findAll(Sort.by("ordem")));
+        for (var batizado: batizados) {
+            OrdemCasal casalDaVez = casais.poll();
+            if (casalDaVez == null) continue;
+            batizado.setCasal(casalDaVez.getCasal());
+            casais.add(casalDaVez);
+        }
+
+        long novaOrdem = 1;
+        for (OrdemCasal casal: casais) {
+            casal.setOrdem(novaOrdem);
+            novaOrdem++;
         }
     }
 
