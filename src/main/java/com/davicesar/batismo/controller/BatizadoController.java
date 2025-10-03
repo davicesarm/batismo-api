@@ -45,12 +45,12 @@ public class BatizadoController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/refazer-escala")
-    @PreAuthorize("hasAuthority('SCOPE_admin') or hasAuthority('SCOPE_coordenador')")
-    public ResponseEntity<Void> refazerEscala() {
-        batizadoService.refazerEscala();
-        return ResponseEntity.ok().build();
-    }
+//    @PostMapping("/refazer-escala")
+//    @PreAuthorize("hasAuthority('SCOPE_admin') or hasAuthority('SCOPE_coordenador')")
+//    public ResponseEntity<Void> refazerEscala() {
+//        batizadoService.refazerEscala();
+//        return ResponseEntity.ok().build();
+//    }
 
     // Excluir batizado
     @DeleteMapping("/{id}")
