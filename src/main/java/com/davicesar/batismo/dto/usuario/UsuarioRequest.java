@@ -15,9 +15,6 @@ public record UsuarioRequest(
         @Enumerated(EnumType.STRING)
         Cargo cargo,
 
-        @NotNull
-        String senha,
-
         @Size(min = 3)
         String nome,
 

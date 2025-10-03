@@ -28,12 +28,12 @@ public class EmailService {
             helper.setFrom(fromEmail, fromName);
 
             helper.setTo(destinatario);
-            helper.setSubject("Email de teste");
+            helper.setSubject("Confirme seu Cadastro");
 
             // Corpo do e-mail
             String texto = "Olá!\n\n";
-            texto += "Esse é um email de teste:\n";
-            texto += "Se esse email chegou a você é um bom sinal :D";
+            texto += "Para ativar sua conta, faça login com este email usando o seguinte token como senha:\n";
+            texto += "Token: " + token;
             texto += "\n\nAtenciosamente,\nEquipe Batismo Davi Cesar.";
 
             helper.setText(texto);
