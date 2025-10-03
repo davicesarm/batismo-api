@@ -2,13 +2,13 @@ package com.davicesar.batismo.service;
 
 import com.davicesar.batismo.dto.login.LoginRequest;
 import com.davicesar.batismo.dto.login.LoginResponse;
+import com.davicesar.batismo.dto.login.RedefinirSenhaDTO;
 import com.davicesar.batismo.dto.usuario.UsuarioRequest;
 import com.davicesar.batismo.dto.usuario.UsuarioResponse;
 import com.davicesar.batismo.model.Cargo;
 import com.davicesar.batismo.model.Usuario;
 import com.davicesar.batismo.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
-import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -20,18 +20,24 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtEncoder jwtEncoder;
+    private final EmailService emailService;
 
-    public UsuarioService(JwtEncoder jwtEncoder, UsuarioRepository usuarioRepository, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public UsuarioService(
+            JwtEncoder jwtEncoder,
+            UsuarioRepository usuarioRepository,
+            BCryptPasswordEncoder bCryptPasswordEncoder,
+            EmailService emailService
+    ) {
         this.jwtEncoder = jwtEncoder;
         this.usuarioRepository = usuarioRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.emailService = emailService;
     }
 
     public List<UsuarioResponse> listarUsuarios() {
@@ -53,9 +59,6 @@ public class UsuarioService {
 
         try {
             usuario.setEmail(dto.email());
-            if (dto.senha() != null) {
-                usuario.setSenha(dto.senha(), bCryptPasswordEncoder);
-            }
             if (cargo != Cargo.casal) {
                 usuario.setNome(dto.nome());
             } else {
@@ -89,29 +92,56 @@ public class UsuarioService {
                 .ifPresentOrElse(
                         usuario -> reativarUsuario(usuario, usuarioDTO),
                         () -> {
-                            Usuario novoUsuario = new Usuario(usuarioDTO, bCryptPasswordEncoder);
+                            Usuario novoUsuario = new Usuario(usuarioDTO);
+                            String token = TokenUtil.generateToken();
+                            novoUsuario.setSenha(token, bCryptPasswordEncoder);
+                            novoUsuario.setSenha_alterada(false);
                             usuarioRepository.save(novoUsuario);
+                            // Coloca isso em uma tread separada...
+                            emailService.enviarEmailDeVerificacao(novoUsuario.getEmail(), token);
                         }
                 );
+    }
+
+    @Transactional
+    public LoginResponse redefinirSenha(RedefinirSenhaDTO dto, Long userId){
+        var usuario = usuarioRepository.findById(userId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        );
+
+        if (!usuario.loginCorreto(dto.senhaAntiga(), bCryptPasswordEncoder)) {
+            throw new BadCredentialsException("senha incorreta.");
+        }
+
+        usuario.setSenha(dto.senhaNova(), bCryptPasswordEncoder);
+        usuario.setSenha_alterada(true);
+        return generateJwt(usuario);
     }
 
     public LoginResponse autenticarUsuario(LoginRequest loginRequest) {
         var usuario = usuarioRepository.findByEmail(loginRequest.email());
 
-        if (usuario.isEmpty() || !usuario.get().loginCorreto(loginRequest, bCryptPasswordEncoder)) {
+        if (usuario.isEmpty() || usuario.get().isInativo() || !usuario.get().loginCorreto(loginRequest.senha(), bCryptPasswordEncoder)) {
             throw new BadCredentialsException("email ou senha incorretos.");
         }
 
+        return generateJwt(usuario.get());
+    }
+
+    private LoginResponse generateJwt(Usuario usuario) {
         var now = Instant.now();
 
         // TODO: implementar refresh token
         var expiresIn = 86400L; // 1 dia
 
-        var scope = usuario.get().getCargo().name();
+        var scope = usuario.getCargo().name();
+        if (!usuario.isSenha_alterada()) {
+            scope = "redefinir-senha";
+        }
 
         var claims = JwtClaimsSet.builder()
                 .issuer("batismo-api")
-                .subject(usuario.get().getId().toString())
+                .subject(usuario.getId().toString())
                 .issuedAt(now)
                 .expiresAt(now.plusSeconds(expiresIn))
                 .claim("scope", scope)
@@ -128,7 +158,6 @@ public class UsuarioService {
         }
 
         usuario.setInativo(false);
-        usuario.setSenha(dto.senha(), bCryptPasswordEncoder);
 
         try {
             if (usuario.getCargo() != Cargo.casal) {

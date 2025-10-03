@@ -34,9 +34,11 @@ public class Usuario {
     @Column(nullable = false)
     private boolean inativo;
 
-    public Usuario(UsuarioRequest user, PasswordEncoder passwordEncoder){
+    @Column(nullable = false)
+    private boolean senha_alterada;
+
+    public Usuario(UsuarioRequest user){
         this.email = user.email();
-        this.senha = passwordEncoder.encode(user.senha());
         this.cargo = user.cargo();
         if (cargo.equals(Cargo.casal)) {
             this.marido = user.marido();
@@ -50,8 +52,8 @@ public class Usuario {
         this.senha = passwordEncoder.encode(senha);
     }
 
-    public boolean loginCorreto(LoginRequest loginRequest, PasswordEncoder passwordEncoder) {
-        return passwordEncoder.matches(loginRequest.senha(), this.senha);
+    public boolean loginCorreto(String senha, PasswordEncoder passwordEncoder) {
+        return passwordEncoder.matches(senha, this.senha);
     }
 }
 

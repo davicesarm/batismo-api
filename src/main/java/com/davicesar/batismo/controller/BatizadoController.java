@@ -12,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/batizados")
+@PreAuthorize("!hasAuthority('SCOPE_redefinir-senha')")
 public class BatizadoController {
     private final BatizadoService batizadoService;
 
