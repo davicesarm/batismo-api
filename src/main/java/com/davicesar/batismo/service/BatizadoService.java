@@ -3,6 +3,10 @@ package com.davicesar.batismo.service;
 import com.davicesar.batismo.dto.batizado.BatizadoResponse;
 import com.davicesar.batismo.dto.batizado.BatizadoRequest;
 import com.davicesar.batismo.dto.batizado.RealocarCasalDTO;
+import com.davicesar.batismo.exception.BatizadoNaoEncontradoException;
+import com.davicesar.batismo.exception.CasalNaoEncontradoException;
+import com.davicesar.batismo.exception.OperacaoProibidaException;
+import com.davicesar.batismo.exception.ProcessamentoInvalidoException;
 import com.davicesar.batismo.model.*;
 import com.davicesar.batismo.repository.BatizadoRepository;
 import com.davicesar.batismo.repository.CatecumenoRepository;
@@ -10,9 +14,7 @@ import com.davicesar.batismo.repository.OrdemCasalRepository;
 import com.davicesar.batismo.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -50,15 +52,13 @@ public class BatizadoService {
     @Transactional
     public void cadastrarBatizado(BatizadoRequest batizadoDTO) {
         if (!intervaloDataValido(batizadoDTO.data())) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new ProcessamentoInvalidoException("Intervalo inválido de data.");
         }
 
         Batizado batizado = new Batizado();
         batizado.setData(batizadoDTO.data());
 
-        OrdemCasal casal = ordemCasalRepository.findByOrdem(1L).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
-        );
+        OrdemCasal casal = ordemCasalRepository.findByOrdem(1L).orElseThrow(CasalNaoEncontradoException::new);
 
         // Define um casal para a criação do batizado (pode ser qualquer um)
         batizado.setCasal(casal.getCasal());
@@ -75,16 +75,6 @@ public class BatizadoService {
         alocarAutomaticamente(batizado.getData());
     }
 
-    private boolean intervaloDataValido(LocalDateTime data) {
-        return batizadoRepository
-                .findByDateRange(
-                        //"1:29", pois o intervalo é [start, end) e quero verificar explicitamente
-                        // se existe um valor dentro desse intervalo, sem incluir o start
-                        data.minusHours(1).minusMinutes(29),
-                        data.plusHours(1).plusMinutes(30)
-                ).isEmpty();
-    }
-
     /**
      * Quando um batizado é cadastrado, rearranja a escala para
      * manter a ordem dos casais.
@@ -97,14 +87,23 @@ public class BatizadoService {
     public void alocarAutomaticamente(LocalDateTime dataBatizado) {
         List<OrdemCasal> casais = ordemCasalRepository.findAll(Sort.by("ordem"));
 
+        // Pega apenas os batizado desde a data do batizado em diante.
         var batizados = batizadoRepository.findByDateRange(dataBatizado, LocalDateTime.of(3000, 12, 31, 23, 59, 59));
 
-        for (int i = 0; i < batizados.size() - 1; i++) {
-            batizados.get(i).setCasal(batizados.get(i + 1).getCasal());
+        // Usando two pointers para evitar mexer nos batizados cuja
+        // alocação manual aconteceu.
+        int l = 0, r = 1;
+        while (r < batizados.size()) {
+            if (!batizados.get(r).isCasal_alocado_manualmente()) {
+                batizados.get(l).setCasal(batizados.get(r).getCasal());
+                l = r;
+            }
+            r++;
         }
 
+        // Definindo o casal da vez para o batizado que sobrou.
         Usuario casalDaVez = casais.getFirst().getCasal();
-        batizados.getLast().setCasal(casalDaVez);
+        batizados.get(l).setCasal(casalDaVez);
 
         int novaOrdem = casais.size();
         for (OrdemCasal o: casais) {
@@ -113,15 +112,29 @@ public class BatizadoService {
         }
     }
 
+    private boolean intervaloDataValido(LocalDateTime data) {
+        return batizadoRepository
+                .findByDateRange(
+                        //"1:29", pois o intervalo é [start, end) (inclui o start e exclui o end)
+                        data.minusHours(1).minusMinutes(29),
+                        data.plusHours(1).plusMinutes(30)
+                ).isEmpty();
+    }
+
     /**
      * Refaz a escala de todos os batizados depois do dia atual.
      */
     @Transactional
     public void refazerEscala() {
-        LocalDateTime amanha = LocalDate.now(ZoneId.of("America/Recife")).plusDays(1).atStartOfDay();
-        var batizados = batizadoRepository.findByDateRange(amanha, LocalDateTime.of(3000, 12, 31, 23, 59, 59));
+        LocalDate hoje = LocalDate.now(ZoneId.of("America/Recife"));
+        LocalDateTime amanha = hoje.plusDays(1).atStartOfDay();
+        LocalDateTime futuroDistante = amanha.plusYears(2000);
+
+        var batizados = batizadoRepository.findByDateRange(amanha, futuroDistante);
         Queue<OrdemCasal> casais = new LinkedList<>(ordemCasalRepository.findAll(Sort.by("ordem")));
+
         for (var batizado: batizados) {
+            if (batizado.isCasal_alocado_manualmente()) continue;
             OrdemCasal casalDaVez = casais.poll();
             if (casalDaVez == null) continue;
             batizado.setCasal(casalDaVez.getCasal());
@@ -138,7 +151,12 @@ public class BatizadoService {
     @Transactional
     public void editarBatizado(Long id, BatizadoRequest dto) {
         var batizado = batizadoRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY));
+                () -> new BatizadoNaoEncontradoException(id)
+        );
+
+        if (batizado.getData().isBefore(LocalDateTime.now(ZoneId.of("America/Recife")))) {
+            throw new OperacaoProibidaException("Não é possível editar um batizado passado.");
+        }
 
         editarCatecumenos(batizado, dto.catecumenos());
         batizado.setCelebrante(dto.celebrante());
@@ -148,7 +166,7 @@ public class BatizadoService {
     @Transactional
     public void editarCatecumenos(Batizado batizado, List<String> catecumenos) {
         if (catecumenos == null || catecumenos.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "A lista de catecúmenos não pode ser vazia.");
+            throw new ProcessamentoInvalidoException("A lista de catecúmenos não pode ser vazia.");
         }
 
         batizado.getCatecumenos().clear();
@@ -163,22 +181,31 @@ public class BatizadoService {
 
     @Transactional
     public void realocarCasal(RealocarCasalDTO dto) {
-        var batizado = batizadoRepository.findById(dto.idBatizado()).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+        long id = dto.idBatizado();
+        var batizado = batizadoRepository.findById(id).orElseThrow(
+                () -> new BatizadoNaoEncontradoException(id)
         );
-        var usuario = usuarioRepository.findById(dto.idCasal());
-        if (usuario.isEmpty() || usuario.get().getCargo() != Cargo.casal) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
+        var usuario = usuarioRepository.findById(dto.idCasal()).orElseThrow(
+                () -> new CasalNaoEncontradoException(id)
+        );
+        if (usuario.getCargo() != Cargo.casal) {
+            throw new ProcessamentoInvalidoException("O usuário deve ser um casal...");
         }
 
-        batizado.setCasal(usuario.get());
+        batizado.setCasal_alocado_manualmente(true);
+        batizado.setCasal(usuario);
     }
 
     @Transactional
     public void excluirBatizado(Long id) {
         var batizado = batizadoRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+                () -> new BatizadoNaoEncontradoException(id)
         );
+
+        if (batizado.getData().isBefore(LocalDateTime.now(ZoneId.of("America/Recife")))) {
+            throw new OperacaoProibidaException("Não é possível excluir um batizado passado.");
+        }
+
         batizadoRepository.delete(batizado);
     }
 }
