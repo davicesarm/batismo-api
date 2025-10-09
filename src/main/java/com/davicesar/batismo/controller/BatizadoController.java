@@ -45,12 +45,12 @@ public class BatizadoController {
         return ResponseEntity.ok().build();
     }
 
-//    @PostMapping("/refazer-escala")
-//    @PreAuthorize("hasAuthority('SCOPE_admin') or hasAuthority('SCOPE_coordenador')")
-//    public ResponseEntity<Void> refazerEscala() {
-//        batizadoService.refazerEscala();
-//        return ResponseEntity.ok().build();
-//    }
+    @PostMapping("/refazer-escala")
+    @PreAuthorize("hasAuthority('SCOPE_admin') or hasAuthority('SCOPE_coordenador')")
+    public ResponseEntity<Void> refazerEscala() {
+        batizadoService.refazerEscalaComNovaOrdem();
+        return ResponseEntity.ok().build();
+    }
 
     // Excluir batizado
     @DeleteMapping("/{id}")
@@ -63,8 +63,8 @@ public class BatizadoController {
     // Visualizar batizados
     @GetMapping
     public ResponseEntity<List<BatizadoResponse>> listarBatizados(
-            @RequestParam(value = "mes", required = false) Integer mes,
-            @RequestParam(value = "ano", required = false) Integer ano
+            @RequestParam(value = "mes") Integer mes,
+            @RequestParam(value = "ano") Integer ano
     ) {
         return ResponseEntity.ok(batizadoService.listarBatizados(mes, ano));
     }

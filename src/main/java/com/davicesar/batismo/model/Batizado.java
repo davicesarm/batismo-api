@@ -19,6 +19,9 @@ public class Batizado {
 
     private String celebrante;
 
+    @Column(nullable = false)
+    private boolean casal_alocado_manualmente;
+
     @ManyToOne
     @JoinColumn(name = "id_casal", nullable = false)
     private Usuario casal;
