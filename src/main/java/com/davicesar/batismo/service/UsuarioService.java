@@ -62,8 +62,14 @@ public class UsuarioService {
 
         Cargo cargo = usuario.getCargo();
         if (!cargo.name().equals(dto.cargo().name())) {
-            throw new ProcessamentoInvalidoException("Não é possível alterar o cargo.");
+            throw new OperacaoProibidaException("Não é possível alterar o cargo.");
         }
+
+        usuarioRepository.findByEmail(dto.email())
+                .ifPresent(u -> {
+                    throw new ProcessamentoInvalidoException("Usuário com email: " + dto.email() + " já existe.");
+                });
+
 
         try {
             usuario.setEmail(dto.email());
@@ -168,7 +174,7 @@ public class UsuarioService {
 
     private void reativarUsuario(Usuario usuario, UsuarioRequest dto) {
         if (!usuario.isInativo()) {
-            throw new ProcessamentoInvalidoException("Usuário já ativo");
+            throw new ProcessamentoInvalidoException("O usuário já está ativo/cadastrado.");
         }
 
         usuario.setInativo(false);

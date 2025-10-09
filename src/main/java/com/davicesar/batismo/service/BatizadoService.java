@@ -241,6 +241,10 @@ public class BatizadoService {
         if (usuario.getCargo() != Cargo.casal) {
             throw new ProcessamentoInvalidoException("O usuário deve ser um casal...");
         }
+        LocalDateTime hoje = LocalDateTime.now(ZoneId.of("America/Recife"));
+        if (batizado.getData().isBefore(hoje)) {
+            throw new OperacaoProibidaException("Não é possível realocar um casal para um batizado passado.");
+        }
 
         batizado.setCasal_alocado_manualmente(true);
         batizado.setCasal(usuario);
