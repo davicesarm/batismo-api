@@ -12,8 +12,4 @@ public class BatizadoNaoEncontradoException extends RuntimeException {
     public BatizadoNaoEncontradoException(Long id) {
         super("Batizado com ID " + id + " não pôde ser encontrado.");
     }
-
-    public BatizadoNaoEncontradoException(String message, Throwable cause) {
-        super(message, cause);
-    }
 }

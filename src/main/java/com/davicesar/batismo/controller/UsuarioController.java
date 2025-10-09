@@ -2,6 +2,7 @@ package com.davicesar.batismo.controller;
 
 import com.davicesar.batismo.dto.usuario.UsuarioRequest;
 import com.davicesar.batismo.dto.usuario.UsuarioResponse;
+import com.davicesar.batismo.service.BatizadoService;
 import com.davicesar.batismo.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,9 +15,12 @@ import java.util.List;
 @PreAuthorize("hasAuthority('SCOPE_admin')")
 public class UsuarioController {
     private final UsuarioService usuarioService;
+    private final BatizadoService batizadoService;
 
-    public UsuarioController(UsuarioService usuarioService) {
+    public UsuarioController(UsuarioService usuarioService, BatizadoService batizadoService) {
         this.usuarioService = usuarioService;
+        this.batizadoService = batizadoService;
+
     }
 
     @PatchMapping("/{id}/editar")
@@ -31,6 +35,7 @@ public class UsuarioController {
     @PatchMapping("/{id}/inativar")
     public ResponseEntity<Void> inativarUsuario(@PathVariable Long id) {
         usuarioService.inativarUsuario(id);
+        batizadoService.refazerEscalaExcluirInativos();
         return ResponseEntity.ok().build();
     }
 

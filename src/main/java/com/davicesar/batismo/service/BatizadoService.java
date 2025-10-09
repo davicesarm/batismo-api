@@ -22,6 +22,7 @@ import java.time.ZoneId;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.function.Function;
 
 @Service
 public class BatizadoService {
@@ -86,24 +87,20 @@ public class BatizadoService {
     @Transactional
     public void alocarAutomaticamente(LocalDateTime dataBatizado) {
         List<OrdemCasal> casais = ordemCasalRepository.findAll(Sort.by("ordem"));
+        LocalDateTime hoje = LocalDateTime.now(ZoneId.of("America/Recife"));
+        LocalDateTime futuroDistante = hoje.plusYears(2000);
 
         // Pega apenas os batizado desde a data do batizado em diante.
-        var batizados = batizadoRepository.findByDateRange(dataBatizado, LocalDateTime.of(3000, 12, 31, 23, 59, 59));
+        // SEM OS ALOCADOS MANUALMENTE
+        var batizados = batizadoRepository.findByDateRangeSemAlocacaoManual(dataBatizado, futuroDistante);
 
-        // Usando two pointers para evitar mexer nos batizados cuja
-        // alocação manual aconteceu.
-        int l = 0, r = 1;
-        while (r < batizados.size()) {
-            if (!batizados.get(r).isCasal_alocado_manualmente()) {
-                batizados.get(l).setCasal(batizados.get(r).getCasal());
-                l = r;
-            }
-            r++;
+        for (int i = 0; i < batizados.size() - 1; i++) {
+            batizados.get(i).setCasal(batizados.get(i + 1).getCasal());
         }
 
         // Definindo o casal da vez para o batizado que sobrou.
         Usuario casalDaVez = casais.getFirst().getCasal();
-        batizados.get(l).setCasal(casalDaVez);
+        batizados.getLast().setCasal(casalDaVez);
 
         int novaOrdem = casais.size();
         for (OrdemCasal o: casais) {
@@ -121,11 +118,64 @@ public class BatizadoService {
                 ).isEmpty();
     }
 
+    @Transactional
+    public void refazerEscalaExcluirInativos() {
+        LocalDate hoje = LocalDate.now(ZoneId.of("America/Recife"));
+        LocalDateTime amanha = hoje.plusDays(1).atStartOfDay();
+        LocalDateTime futuroDistante = amanha.plusYears(2000);
+
+        var batizados = batizadoRepository.findByDateRangeSemAlocacaoManual(amanha, futuroDistante);
+        Queue<OrdemCasal> casais = new LinkedList<>(ordemCasalRepository.findAll(Sort.by("ordem")));
+
+        Function<Integer, Boolean> casalInativo = i -> batizados.get(i).getCasal().isInativo();
+
+        int l = 0;
+        int n = batizados.size();
+
+        // Encontrado o primeiro casal inativo
+        for (int i = 0; i < n; i++) {
+            if (casalInativo.apply(i)) {
+                l = i;
+                break;
+            }
+            if (i == n - 1) return;
+        }
+
+        int r = l;
+
+        while (r < n) {
+            if (!casalInativo.apply(r)) {
+                // Troca os casais
+                Usuario casalR = batizados.get(r).getCasal();
+                // Batizado do R com o casal do L
+                batizados.get(r).setCasal(batizados.get(l).getCasal());
+                // Batizado do L com o casal do R
+                batizados.get(l).setCasal(casalR);
+                l++;
+            }
+            r++;
+        }
+
+        while (l < n) {
+            OrdemCasal casalDaVez = casais.poll();
+            if (casalDaVez == null) break;
+            batizados.get(l).setCasal(casalDaVez.getCasal());
+            casais.add(casalDaVez);
+            l++;
+        }
+
+        long novaOrdem = 1;
+        for (OrdemCasal casal: casais) {
+            casal.setOrdem(novaOrdem);
+            novaOrdem++;
+        }
+    }
+
     /**
      * Refaz a escala de todos os batizados depois do dia atual.
      */
     @Transactional
-    public void refazerEscala() {
+    public void refazerEscalaComNovaOrdem() {
         LocalDate hoje = LocalDate.now(ZoneId.of("America/Recife"));
         LocalDateTime amanha = hoje.plusDays(1).atStartOfDay();
         LocalDateTime futuroDistante = amanha.plusYears(2000);

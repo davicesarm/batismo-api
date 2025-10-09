@@ -48,7 +48,7 @@ public class BatizadoController {
     @PostMapping("/refazer-escala")
     @PreAuthorize("hasAuthority('SCOPE_admin') or hasAuthority('SCOPE_coordenador')")
     public ResponseEntity<Void> refazerEscala() {
-        batizadoService.refazerEscala();
+        batizadoService.refazerEscalaComNovaOrdem();
         return ResponseEntity.ok().build();
     }
 

@@ -12,8 +12,4 @@ public class CasalNaoEncontradoException extends RuntimeException{
     public CasalNaoEncontradoException(Long id) {
         super("Casal com ID " + id + " não pôde ser encontrado.");
     }
-
-    public CasalNaoEncontradoException(String message, Throwable cause) {
-        super(message, cause);
-    }
 }
