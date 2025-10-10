@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.davicesar</groupId>
 	<artifactId>batismo</artifactId>
-	<version>0.6.0-SNAPSHOT</version>
+	<version>0.7.0-SNAPSHOT</version>
 	<name>batismo</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>

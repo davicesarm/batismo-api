@@ -35,4 +35,14 @@ public interface BatizadoRepository extends JpaRepository<Batizado, Long> {
         ORDER BY b.data ASC
         """)
     List<Batizado> findByDateRange(@Param("dataInicio") LocalDateTime dataInicio, @Param("dataFim") LocalDateTime dataFim);
+
+    @Query("""
+        SELECT DISTINCT b FROM Batizado b
+        LEFT JOIN FETCH b.catecumenos
+        WHERE b.data >= :dataInicio AND b.data < :dataFim
+        AND NOT b.casal_alocado_manualmente
+        ORDER BY b.data ASC
+        """)
+    List<Batizado> findByDateRangeSemAlocacaoManual(@Param("dataInicio") LocalDateTime dataInicio, @Param("dataFim") LocalDateTime dataFim);
+
 }

@@ -5,8 +5,12 @@ import com.davicesar.batismo.dto.login.LoginResponse;
 import com.davicesar.batismo.dto.login.RedefinirSenhaDTO;
 import com.davicesar.batismo.dto.usuario.UsuarioRequest;
 import com.davicesar.batismo.dto.usuario.UsuarioResponse;
+import com.davicesar.batismo.exception.OperacaoProibidaException;
+import com.davicesar.batismo.exception.ProcessamentoInvalidoException;
+import com.davicesar.batismo.exception.UsuarioNaoEncontradoException;
 import com.davicesar.batismo.model.Cargo;
 import com.davicesar.batismo.model.Usuario;
+import com.davicesar.batismo.repository.OrdemCasalRepository;
 import com.davicesar.batismo.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
@@ -27,17 +31,20 @@ public class UsuarioService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtEncoder jwtEncoder;
     private final EmailService emailService;
+    private final OrdemCasalRepository ordemCasalRepository;
 
     public UsuarioService(
             JwtEncoder jwtEncoder,
             UsuarioRepository usuarioRepository,
             BCryptPasswordEncoder bCryptPasswordEncoder,
-            EmailService emailService
+            EmailService emailService,
+            OrdemCasalRepository ordemCasalRepository
     ) {
         this.jwtEncoder = jwtEncoder;
         this.usuarioRepository = usuarioRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.emailService = emailService;
+        this.ordemCasalRepository = ordemCasalRepository;
     }
 
     public List<UsuarioResponse> listarUsuarios() {
@@ -50,12 +57,19 @@ public class UsuarioService {
     @Transactional
     public void editarUsuario(Long id, UsuarioRequest dto) {
         var usuario = usuarioRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY));
+                () -> new UsuarioNaoEncontradoException(id)
+        );
 
         Cargo cargo = usuario.getCargo();
         if (!cargo.name().equals(dto.cargo().name())) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new OperacaoProibidaException("Não é possível alterar o cargo.");
         }
+
+        usuarioRepository.findByEmail(dto.email())
+                .ifPresent(u -> {
+                    throw new ProcessamentoInvalidoException("Usuário com email: " + dto.email() + " já existe.");
+                });
+
 
         try {
             usuario.setEmail(dto.email());
@@ -73,7 +87,12 @@ public class UsuarioService {
     @Transactional
     public void inativarUsuario(Long id) {
         var usuario = usuarioRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY));
+                () -> new UsuarioNaoEncontradoException(id)
+        );
+
+        if (usuario.getCargo() == Cargo.casal && ordemCasalRepository.findAll().size() <= 1) {
+            throw new OperacaoProibidaException("A quantidade de casais é não pode ser menor que 1");
+        }
 
         usuario.setInativo(true);
     }
@@ -81,7 +100,8 @@ public class UsuarioService {
     @Transactional
     public void reativarUsuario(Long id) {
         var usuario = usuarioRepository.findById(id).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY));
+                () -> new UsuarioNaoEncontradoException(id)
+        );
 
         usuario.setInativo(false);
     }
@@ -106,11 +126,11 @@ public class UsuarioService {
     @Transactional
     public LoginResponse redefinirSenha(RedefinirSenhaDTO dto, Long userId){
         var usuario = usuarioRepository.findById(userId).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY)
+                () -> new UsuarioNaoEncontradoException(userId)
         );
 
         if (!usuario.loginCorreto(dto.senhaAntiga(), bCryptPasswordEncoder)) {
-            throw new BadCredentialsException("senha incorreta.");
+            throw new BadCredentialsException("Senha incorreta.");
         }
 
         usuario.setSenha(dto.senhaNova(), bCryptPasswordEncoder);
@@ -122,7 +142,7 @@ public class UsuarioService {
         var usuario = usuarioRepository.findByEmail(loginRequest.email());
 
         if (usuario.isEmpty() || usuario.get().isInativo() || !usuario.get().loginCorreto(loginRequest.senha(), bCryptPasswordEncoder)) {
-            throw new BadCredentialsException("email ou senha incorretos.");
+            throw new BadCredentialsException("Email ou senha incorretos.");
         }
 
         return generateJwt(usuario.get());
@@ -154,7 +174,7 @@ public class UsuarioService {
 
     private void reativarUsuario(Usuario usuario, UsuarioRequest dto) {
         if (!usuario.isInativo()) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY);
+            throw new ProcessamentoInvalidoException("O usuário já está ativo/cadastrado.");
         }
 
         usuario.setInativo(false);
