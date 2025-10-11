@@ -133,7 +133,7 @@ public class UsuarioService {
                 () -> new UsuarioNaoEncontradoException(userId)
         );
 
-        if (!usuario.loginCorreto(dto.senhaAntiga(), bCryptPasswordEncoder)) {
+        if (usuario.loginIncorreto(dto.senhaAntiga(), bCryptPasswordEncoder)) {
             throw new BadCredentialsException("Senha incorreta.");
         }
 
@@ -146,7 +146,7 @@ public class UsuarioService {
     public ResponseCookie autenticarUsuario(LoginRequest loginRequest) {
         var usuario = usuarioRepository.findByEmail(loginRequest.email());
 
-        if (usuario.isEmpty() || usuario.get().isInativo() || !usuario.get().loginCorreto(loginRequest.senha(), bCryptPasswordEncoder)) {
+        if (usuario.isEmpty() || usuario.get().isInativo() || usuario.get().loginIncorreto(loginRequest.senha(), bCryptPasswordEncoder)) {
             throw new BadCredentialsException("Email ou senha incorretos.");
         }
         String jwt = generateJwt(usuario.get());
@@ -161,7 +161,7 @@ public class UsuarioService {
 
         var scope = usuario.getCargo().name();
         if (!usuario.isSenha_alterada()) {
-            scope = "redefinir-senha";
+            scope = Cargo.redefinir_senha.name();
         }
 
         var claims = JwtClaimsSet.builder()
@@ -200,6 +200,8 @@ public class UsuarioService {
                 () -> new UsuarioNaoEncontradoException(id)
         );
 
-        return new UsuarioProfileDTO(usuario.getEmail(), usuario.getCargo());
+        Cargo cargo = !usuario.isSenha_alterada() ? Cargo.redefinir_senha : usuario.getCargo();
+
+        return new UsuarioProfileDTO(usuario.getEmail(), cargo);
     }
 }

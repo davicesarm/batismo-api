@@ -33,7 +33,7 @@ public class TokenController {
                 .build();
     }
 
-    @PostMapping("/redefinir-senha")
+    @PostMapping("/redefinir_senha")
     public ResponseEntity<LoginResponse> redefinirSenha(
             @RequestBody RedefinirSenhaDTO dto,
             @AuthenticationPrincipal Jwt jwt

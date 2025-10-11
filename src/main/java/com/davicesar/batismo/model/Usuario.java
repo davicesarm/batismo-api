@@ -1,6 +1,5 @@
 package com.davicesar.batismo.model;
 
-import com.davicesar.batismo.dto.login.LoginRequest;
 import com.davicesar.batismo.dto.usuario.UsuarioRequest;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -43,7 +42,7 @@ public class Usuario {
         if (cargo.equals(Cargo.casal)) {
             this.marido = user.marido();
             this.mulher = user.mulher();
-        } else {
+        } else if (!cargo.equals(Cargo.redefinir_senha)) {
             this.nome = user.nome();
         }
     }
@@ -52,8 +51,8 @@ public class Usuario {
         this.senha = passwordEncoder.encode(senha);
     }
 
-    public boolean loginCorreto(String senha, PasswordEncoder passwordEncoder) {
-        return passwordEncoder.matches(senha, this.senha);
+    public boolean loginIncorreto(String senha, PasswordEncoder passwordEncoder) {
+        return !passwordEncoder.matches(senha, this.senha);
     }
 }
 
