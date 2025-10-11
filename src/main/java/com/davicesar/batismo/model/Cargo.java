@@ -4,5 +4,6 @@ public enum Cargo {
     admin,
     secretaria,
     casal,
-    coordenador
+    coordenador,
+    redefinir_senha
 }
