@@ -1,11 +1,14 @@
 package com.davicesar.batismo.controller;
 
+import com.davicesar.batismo.dto.usuario.UsuarioProfileDTO;
 import com.davicesar.batismo.dto.usuario.UsuarioRequest;
 import com.davicesar.batismo.dto.usuario.UsuarioResponse;
 import com.davicesar.batismo.service.BatizadoService;
 import com.davicesar.batismo.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -54,6 +57,14 @@ public class UsuarioController {
     public ResponseEntity<Void> cadastrarUsuario(@RequestBody UsuarioRequest dto) {
         usuarioService.cadastrarUsuario(dto);
         return ResponseEntity.ok().build();
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me")
+    public ResponseEntity<UsuarioProfileDTO> dadosUsuario(@AuthenticationPrincipal Jwt jwt) {
+        Long user_id = Long.parseLong(jwt.getSubject());
+        UsuarioProfileDTO perfilUsuario = usuarioService.getDadosUsuario(user_id);
+        return ResponseEntity.ok(perfilUsuario);
     }
 
 }

@@ -1,8 +1,8 @@
 package com.davicesar.batismo.service;
 
 import com.davicesar.batismo.dto.login.LoginRequest;
-import com.davicesar.batismo.dto.login.LoginResponse;
 import com.davicesar.batismo.dto.login.RedefinirSenhaDTO;
+import com.davicesar.batismo.dto.usuario.UsuarioProfileDTO;
 import com.davicesar.batismo.dto.usuario.UsuarioRequest;
 import com.davicesar.batismo.dto.usuario.UsuarioResponse;
 import com.davicesar.batismo.exception.OperacaoProibidaException;
@@ -14,6 +14,7 @@ import com.davicesar.batismo.repository.OrdemCasalRepository;
 import com.davicesar.batismo.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -32,19 +33,22 @@ public class UsuarioService {
     private final JwtEncoder jwtEncoder;
     private final EmailService emailService;
     private final OrdemCasalRepository ordemCasalRepository;
+    private final CookieUtil cookieUtil;
 
     public UsuarioService(
             JwtEncoder jwtEncoder,
             UsuarioRepository usuarioRepository,
             BCryptPasswordEncoder bCryptPasswordEncoder,
             EmailService emailService,
-            OrdemCasalRepository ordemCasalRepository
+            OrdemCasalRepository ordemCasalRepository,
+            CookieUtil cookieUtil
     ) {
         this.jwtEncoder = jwtEncoder;
         this.usuarioRepository = usuarioRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.emailService = emailService;
         this.ordemCasalRepository = ordemCasalRepository;
+        this.cookieUtil = cookieUtil;
     }
 
     public List<UsuarioResponse> listarUsuarios() {
@@ -124,7 +128,7 @@ public class UsuarioService {
     }
 
     @Transactional
-    public LoginResponse redefinirSenha(RedefinirSenhaDTO dto, Long userId){
+    public ResponseCookie redefinirSenha(RedefinirSenhaDTO dto, Long userId){
         var usuario = usuarioRepository.findById(userId).orElseThrow(
                 () -> new UsuarioNaoEncontradoException(userId)
         );
@@ -135,24 +139,25 @@ public class UsuarioService {
 
         usuario.setSenha(dto.senhaNova(), bCryptPasswordEncoder);
         usuario.setSenha_alterada(true);
-        return generateJwt(usuario);
+        String jwt = generateJwt(usuario);
+        return cookieUtil.generateJwtCookie(jwt);
     }
 
-    public LoginResponse autenticarUsuario(LoginRequest loginRequest) {
+    public ResponseCookie autenticarUsuario(LoginRequest loginRequest) {
         var usuario = usuarioRepository.findByEmail(loginRequest.email());
 
         if (usuario.isEmpty() || usuario.get().isInativo() || !usuario.get().loginCorreto(loginRequest.senha(), bCryptPasswordEncoder)) {
             throw new BadCredentialsException("Email ou senha incorretos.");
         }
-
-        return generateJwt(usuario.get());
+        String jwt = generateJwt(usuario.get());
+        return cookieUtil.generateJwtCookie(jwt);
     }
 
-    private LoginResponse generateJwt(Usuario usuario) {
+    private String generateJwt(Usuario usuario) {
         var now = Instant.now();
 
         // TODO: implementar refresh token
-        var expiresIn = 86400L; // 1 dia
+        var expiresIn = 3600 * 24; // 1 dia
 
         var scope = usuario.getCargo().name();
         if (!usuario.isSenha_alterada()) {
@@ -167,9 +172,7 @@ public class UsuarioService {
                 .claim("scope", scope)
                 .build();
 
-        var jwtValue = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
-
-        return new LoginResponse(jwtValue, expiresIn);
+        return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
     private void reativarUsuario(Usuario usuario, UsuarioRequest dto) {
@@ -190,5 +193,13 @@ public class UsuarioService {
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
+    }
+
+    public UsuarioProfileDTO getDadosUsuario(Long id) {
+        var usuario = usuarioRepository.findById(id).orElseThrow(
+                () -> new UsuarioNaoEncontradoException(id)
+        );
+
+        return new UsuarioProfileDTO(usuario.getEmail(), usuario.getCargo());
     }
 }
