@@ -3,6 +3,7 @@ package com.davicesar.batismo.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import jakarta.mail.internet.MimeMessage;
@@ -18,6 +19,7 @@ public class EmailService {
      * @param destinatario O e-mail do usuário que receberá a mensagem.
      * @param token O token de verificação a ser incluído no link.
      */
+    @Async
     public void enviarEmailDeVerificacao(String destinatario, String token) {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();

@@ -121,7 +121,6 @@ public class UsuarioService {
                             novoUsuario.setSenha(token, bCryptPasswordEncoder);
                             novoUsuario.setSenha_alterada(false);
                             usuarioRepository.save(novoUsuario);
-                            // Coloca isso em uma tread separada...
                             emailService.enviarEmailDeVerificacao(novoUsuario.getEmail(), token);
                         }
                 );
