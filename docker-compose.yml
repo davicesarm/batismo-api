@@ -1,0 +1,28 @@
+services:
+  api:
+    build: .
+    container_name: batismo-api
+    ports:
+      - "${PORT}:${PORT}"
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+
+  postgres:
+    image: postgres:16
+    container_name: batismo-postgres
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: batismo
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
